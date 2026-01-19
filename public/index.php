@@ -2,7 +2,7 @@
 require_once "../config/db.php";
 
 $stmt = $pdo->query("
-    SELECT nombre, apellido, curso, puntos
+    SELECT nombre, apellido, clase, curso, puntos
     FROM alumnos
     ORDER BY puntos DESC
 ");
@@ -15,6 +15,7 @@ $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <tr>
     <th>Nombre</th>
     <th>Apellido</th>
+    <th>Clase</th>
     <th>Curso</th>
     <th>Puntos</th>
 </tr>
@@ -23,6 +24,7 @@ $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <tr>
     <td><?= htmlspecialchars($a['nombre']) ?></td>
     <td><?= htmlspecialchars($a['apellido']) ?></td>
+    <td><?= htmlspecialchars($a['clase']) ?></td>
     <td><?= htmlspecialchars($a['curso']) ?></td>
     <td><?= $a['puntos'] ?></td>
 </tr>
