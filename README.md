@@ -1,2 +1,2 @@
 # webpuntosajedrez
-Web de puntos por buen comportamiento
+Proyecto web para gestionar puntos de buen comportamiento del alumnado.
