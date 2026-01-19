@@ -1,4 +1,5 @@
 <?php
-phpinfo();
+require_once "../config/db.php";
+
 
 
