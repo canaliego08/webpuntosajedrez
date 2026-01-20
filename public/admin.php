@@ -100,11 +100,15 @@ $password = getenv("DB_PASS");
 
 try {
     $pdo = new PDO(
-        "pgsql:host=$host;dbname=$dbname",
-        $user,
-        $password,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
+       "pgsql:host=$host;dbname=$dbname;sslmode=require",
+       $user,
+       $password,
+       [
+           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+           PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+       ]
+   );
+
 } catch (PDOException $e) {
     die("Error de conexión");
 }
