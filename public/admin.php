@@ -305,7 +305,6 @@ button {
 <table>
 <tr>
     <th>Alumno</th>
-    <th>Clase</th>
     <th>Puntos</th>
     <th>Acción</th>
 </tr>
@@ -314,7 +313,6 @@ button {
 <tr>
     <td><?= htmlspecialchars($a['nombre'].' '.$a['apellido']) ?></td>
     <td><?= htmlspecialchars($a['clase']) ?></td>
-    <td class="puntos"><?= $a['puntos'] ?></td>
     <td>
         <form method="post" style="display:flex; gap:6px;">
             <input type="hidden" name="id" value="<?= $a['id'] ?>">
