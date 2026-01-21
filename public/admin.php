@@ -37,11 +37,13 @@ if (!isset($_SESSION['admin'])):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Acceso administrador</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
     background: #eef1f5;
 }
+
 .login {
     max-width: 350px;
     margin: 120px auto;
@@ -51,11 +53,13 @@ body {
     text-align: center;
     box-shadow: 0 8px 20px rgba(0,0,0,.15);
 }
+
 input {
     padding: 10px;
     width: 100%;
     margin: 10px 0;
 }
+
 button {
     padding: 10px;
     width: 100%;
@@ -65,39 +69,9 @@ button {
     border-radius: 6px;
     cursor: pointer;
 }
+
 .error {
     color: red;
-}
-/* =========================
-   RESPONSIVE
-   ========================= */
-@media (max-width: 768px) {
-
-    .container {
-        padding: 15px;
-        margin: 15px;
-    }
-
-    table {
-        font-size: 14px;
-    }
-
-    th, td {
-        padding: 6px;
-    }
-
-    input[type="number"] {
-        width: 60px;
-    }
-
-    button {
-        padding: 8px;
-        font-size: 16px;
-    }
-
-    h1 {
-        font-size: 22px;
-    }
 }
 </style>
 </head>
@@ -132,17 +106,16 @@ $password = getenv("DB_PASS");
 
 try {
     $pdo = new PDO(
-       "pgsql:host=$host;dbname=$dbname;sslmode=require",
-       $user,
-       $password,
-       [
-           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-           PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-       ]
-   );
-
+        "pgsql:host=$host;dbname=$dbname;sslmode=require",
+        $user,
+        $password,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
 } catch (PDOException $e) {
-    die("Error de conexión");
+    die("Error de conexión con la base de datos");
 }
 
 /* =========================
@@ -155,13 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 
     if ($puntos > 0) {
         if ($accion === 'sumar') {
-            $sql = "UPDATE alumnos
-                    SET puntos = puntos + :puntos
-                    WHERE id = :id";
+            $sql = "UPDATE alumnos SET puntos = puntos + :puntos WHERE id = :id";
         } else {
-            $sql = "UPDATE alumnos
-                    SET puntos = GREATEST(puntos - :puntos, 0)
-                    WHERE id = :id";
+            $sql = "UPDATE alumnos SET puntos = GREATEST(puntos - :puntos, 0) WHERE id = :id";
         }
 
         $stmt = $pdo->prepare($sql);
@@ -186,7 +155,7 @@ $claseSeleccionada = $_GET['clase'] ?? '';
 
 if ($claseSeleccionada) {
     $stmt = $pdo->prepare(
-        "SELECT id, nombre, apellido, puntos, clase
+        "SELECT id, nombre, apellido, puntos
          FROM alumnos
          WHERE clase = :clase
          ORDER BY nombre"
@@ -194,19 +163,20 @@ if ($claseSeleccionada) {
     $stmt->execute(['clase' => $claseSeleccionada]);
 } else {
     $stmt = $pdo->query(
-        "SELECT id, nombre, apellido, puntos, clase
+        "SELECT id, nombre, apellido, puntos
          FROM alumnos
-         ORDER BY clase, nombre"
+         ORDER BY nombre"
     );
 }
 
-$alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$alumnos = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestión de puntos</title>
 
 <style>
@@ -230,7 +200,7 @@ h1 {
 
 .logout {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 select {
@@ -277,11 +247,49 @@ button {
 
 .puntos {
     font-weight: bold;
+    text-align: center;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 768px) {
+
+    .container {
+        padding: 15px;
+        margin: 15px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 6px;
+    }
+
+    form {
+        flex-wrap: wrap;
+    }
+
+    input[type="number"] {
+        width: 60px;
+    }
+
+    button {
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
 }
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
 <h1>➕➖ Gestión de puntos</h1>
@@ -290,7 +298,7 @@ button {
     <a href="?logout=1">🚪 Cerrar sesión</a>
 </div>
 
-<form method="get" style="text-align:center; margin-bottom:20px;">
+<form method="get" style="text-align:center; margin-bottom:10px;">
     <select name="clase" onchange="this.form.submit()">
         <option value="">Todas las clases</option>
         <?php foreach ($clases as $clase): ?>
@@ -302,6 +310,12 @@ button {
     </select>
 </form>
 
+<?php if ($claseSeleccionada): ?>
+<p style="text-align:center; font-weight:bold; margin-bottom:15px;">
+    Clase seleccionada: <?= htmlspecialchars($claseSeleccionada) ?>
+</p>
+<?php endif; ?>
+
 <table>
 <tr>
     <th>Alumno</th>
@@ -312,7 +326,7 @@ button {
 <?php foreach ($alumnos as $a): ?>
 <tr>
     <td><?= htmlspecialchars($a['nombre'].' '.$a['apellido']) ?></td>
-    <td><?= htmlspecialchars($a['clase']) ?></td>
+    <td class="puntos"><?= (int)$a['puntos'] ?></td>
     <td>
         <form method="post" style="display:flex; gap:6px;">
             <input type="hidden" name="id" value="<?= $a['id'] ?>">
@@ -326,5 +340,6 @@ button {
 </table>
 
 </div>
+
 </body>
 </html>
