@@ -68,6 +68,37 @@ button {
 .error {
     color: red;
 }
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 768px) {
+
+    .container {
+        padding: 15px;
+        margin: 15px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 6px;
+    }
+
+    input[type="number"] {
+        width: 60px;
+    }
+
+    button {
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+}
 </style>
 </head>
 <body>
