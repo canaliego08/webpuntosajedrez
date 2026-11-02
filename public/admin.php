@@ -1,10 +1,11 @@
+```php
 <?php
 session_start();
 
 /* =========================
    CONFIGURACIÓN CONTRASEÑA
    ========================= */
-define('ADMIN_PASSWORD', 'ajedrez123'); // 🔴 CAMBIA ESTA CONTRASEÑA
+define('ADMIN_PASSWORD', 'ajedrez123');
 
 /* =========================
    LOGIN
@@ -81,7 +82,7 @@ button {
     <h2>🔐 Acceso admin</h2>
 
     <?php if (isset($error)): ?>
-        <p class="error"><?= $error ?></p>
+        <p class="error"><?= htmlspecialchars($error) ?></p>
     <?php endif; ?>
 
     <form method="post">
@@ -119,24 +120,50 @@ try {
 }
 
 /* =========================
+   CURSO ACTUAL
+   ========================= */
+$cursoActual = '2026/2027';
+
+/* =========================
    SUMAR / RESTAR PUNTOS
    ========================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
-    $id = (int)$_POST['id'];
-    $puntos = (int)$_POST['puntos'];
+
+    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+    $puntos = filter_input(INPUT_POST, 'puntos', FILTER_VALIDATE_INT);
     $accion = $_POST['accion'];
 
-    if ($puntos > 0) {
+    if (
+        $id !== false && $id !== null && $id > 0 &&
+        $puntos !== false && $puntos !== null && $puntos > 0 &&
+        in_array($accion, ['sumar', 'restar'], true)
+    ) {
+
         if ($accion === 'sumar') {
-            $sql = "UPDATE alumnos SET puntos = puntos + :puntos WHERE id = :id";
+
+            $sql = "
+                UPDATE alumnos
+                SET puntos = puntos + :puntos
+                WHERE id = :id
+                AND curso = :curso
+            ";
+
         } else {
-            $sql = "UPDATE alumnos SET puntos = GREATEST(puntos - :puntos, 0) WHERE id = :id";
+
+            $sql = "
+                UPDATE alumnos
+                SET puntos = GREATEST(puntos - :puntos, 0)
+                WHERE id = :id
+                AND curso = :curso
+            ";
         }
 
         $stmt = $pdo->prepare($sql);
+
         $stmt->execute([
             'puntos' => $puntos,
-            'id' => $id
+            'id' => $id,
+            'curso' => $cursoActual
         ]);
     }
 }
@@ -144,9 +171,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 /* =========================
    CLASES DISPONIBLES
    ========================= */
-$clases = $pdo->query(
-    "SELECT DISTINCT clase FROM alumnos ORDER BY clase"
-)->fetchAll(PDO::FETCH_COLUMN);
+$stmt = $pdo->prepare("
+    SELECT DISTINCT clase
+    FROM alumnos
+    WHERE curso = :curso
+    ORDER BY clase
+");
+
+$stmt->execute([
+    'curso' => $cursoActual
+]);
+
+$clases = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 /* =========================
    FILTRO
@@ -154,19 +190,32 @@ $clases = $pdo->query(
 $claseSeleccionada = $_GET['clase'] ?? '';
 
 if ($claseSeleccionada) {
-    $stmt = $pdo->prepare(
-        "SELECT id, nombre, apellido, puntos
-         FROM alumnos
-         WHERE clase = :clase
-         ORDER BY nombre"
-    );
-    $stmt->execute(['clase' => $claseSeleccionada]);
+
+    $stmt = $pdo->prepare("
+        SELECT id, nombre, apellido, puntos
+        FROM alumnos
+        WHERE curso = :curso
+        AND clase = :clase
+        ORDER BY nombre
+    ");
+
+    $stmt->execute([
+        'curso' => $cursoActual,
+        'clase' => $claseSeleccionada
+    ]);
+
 } else {
-    $stmt = $pdo->query(
-        "SELECT id, nombre, apellido, puntos
-         FROM alumnos
-         ORDER BY nombre"
-    );
+
+    $stmt = $pdo->prepare("
+        SELECT id, nombre, apellido, puntos
+        FROM alumnos
+        WHERE curso = :curso
+        ORDER BY nombre
+    ");
+
+    $stmt->execute([
+        'curso' => $cursoActual
+    ]);
 }
 
 $alumnos = $stmt->fetchAll();
@@ -299,15 +348,20 @@ button {
 </div>
 
 <form method="get" style="text-align:center; margin-bottom:10px;">
+
     <select name="clase" onchange="this.form.submit()">
+
         <option value="">Todas las clases</option>
+
         <?php foreach ($clases as $clase): ?>
             <option value="<?= htmlspecialchars($clase) ?>"
                 <?= $clase === $claseSeleccionada ? 'selected' : '' ?>>
                 <?= htmlspecialchars($clase) ?>
             </option>
         <?php endforeach; ?>
+
     </select>
+
 </form>
 
 <?php if ($claseSeleccionada): ?>
@@ -324,22 +378,33 @@ button {
 </tr>
 
 <?php foreach ($alumnos as $a): ?>
+
 <tr>
     <td><?= htmlspecialchars($a['nombre'].' '.$a['apellido']) ?></td>
+
     <td class="puntos"><?= (int)$a['puntos'] ?></td>
+
     <td>
         <form method="post" style="display:flex; gap:6px;">
-            <input type="hidden" name="id" value="<?= $a['id'] ?>">
+
+            <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+
             <input type="number" name="puntos" min="1" required>
+
             <button class="btn-sumar" name="accion" value="sumar">➕</button>
+
             <button class="btn-restar" name="accion" value="restar">➖</button>
+
         </form>
     </td>
 </tr>
+
 <?php endforeach; ?>
+
 </table>
 
 </div>
 
 </body>
 </html>
+```
