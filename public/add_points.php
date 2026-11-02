@@ -2,7 +2,7 @@
 require_once "../config/db.php";
 
 // --------------------
-// CONFIGURACIÓN
+// CURSO ACTUAL
 // --------------------
 $cursoActual = '2026/2027';
 
