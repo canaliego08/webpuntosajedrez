@@ -19,9 +19,22 @@ try {
 }
 
 // --------------------
+// CURSO ACTUAL
+// --------------------
+$cursoActual = '2026/2027';
+
+// --------------------
 // OBTENER CLASES
 // --------------------
-$clases = $pdo->query("SELECT DISTINCT clase FROM alumnos ORDER BY clase")->fetchAll(PDO::FETCH_COLUMN);
+$stmt = $pdo->prepare(
+    "SELECT DISTINCT clase 
+     FROM alumnos 
+     WHERE curso = :curso 
+     ORDER BY clase"
+);
+
+$stmt->execute(['curso' => $cursoActual]);
+$clases = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // --------------------
 // FILTRO
@@ -32,20 +45,30 @@ if ($claseSeleccionada) {
     $stmt = $pdo->prepare(
         "SELECT nombre, apellido, puntos, clase 
          FROM alumnos 
-         WHERE clase = :clase 
+         WHERE curso = :curso 
+         AND clase = :clase 
          ORDER BY puntos DESC"
     );
-    $stmt->execute(['clase' => $claseSeleccionada]);
+
+    $stmt->execute([
+        'curso' => $cursoActual,
+        'clase' => $claseSeleccionada
+    ]);
+
 } else {
-    $stmt = $pdo->query(
+    $stmt = $pdo->prepare(
         "SELECT nombre, apellido, puntos, clase 
          FROM alumnos 
+         WHERE curso = :curso 
          ORDER BY puntos DESC"
     );
+
+    $stmt->execute(['curso' => $cursoActual]);
 }
 
 $alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -119,6 +142,7 @@ tr:hover {
     color: #888;
     font-size: 14px;
 }
+
 /* =========================
    RESPONSIVE
    ========================= */
@@ -161,12 +185,14 @@ tr:hover {
 <form method="get">
     <select name="clase" onchange="this.form.submit()">
         <option value="">Todas las clases</option>
+
         <?php foreach ($clases as $clase): ?>
             <option value="<?= htmlspecialchars($clase) ?>"
                 <?= $clase === $claseSeleccionada ? 'selected' : '' ?>>
                 <?= htmlspecialchars($clase) ?>
             </option>
         <?php endforeach; ?>
+
     </select>
 </form>
 
@@ -179,6 +205,7 @@ tr:hover {
     </tr>
 
     <?php $pos = 1; ?>
+
     <?php foreach ($alumnos as $a): ?>
     <tr>
         <td><?= $pos++ ?></td>
@@ -187,6 +214,7 @@ tr:hover {
         <td class="puntos"><?= $a['puntos'] ?></td>
     </tr>
     <?php endforeach; ?>
+
 </table>
 
 <div class="footer">
@@ -196,7 +224,3 @@ tr:hover {
 </div>
 </body>
 </html>
-
-
-
-
