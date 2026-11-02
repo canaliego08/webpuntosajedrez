@@ -2,12 +2,12 @@
 require_once "../config/db.php";
 
 // --------------------
-// CONFIGURACIÓN
+// CURSO ACTUAL
 // --------------------
 $cursoActual = '2026/2027';
 
 // --------------------
-// OBTENER ALUMNOS DEL CURSO ACTUAL
+// OBTENER ALUMNOS DEL CURSO
 // --------------------
 $stmt = $pdo->prepare("
     SELECT id, nombre, apellido
@@ -20,12 +20,13 @@ $stmt->execute([
     ':curso' => $cursoActual
 ]);
 
-$alumnos = $stmt->fetchAll();
+$alumnos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <h1>Añadir puntos</h1>
 
-<form action="addpoints.php" method="post">
+<form action="add_points.php" method="post">
+
     <select name="id" required>
         <?php foreach ($alumnos as $a): ?>
             <option value="<?= $a['id'] ?>">
@@ -35,5 +36,7 @@ $alumnos = $stmt->fetchAll();
     </select>
 
     <input type="number" name="puntos" min="1" required>
+
     <button type="submit">Añadir</button>
+
 </form>
